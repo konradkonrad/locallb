@@ -1,0 +1,5 @@
+localhost:80 {
+	reverse_proxy {$PROXY_TO} {
+		lb_policy first
+	}
+}

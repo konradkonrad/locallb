@@ -1,0 +1,10 @@
+services:
+  caddy:
+    environment:
+      PROXY_TO: "http://neverssl.com:80 http://blog.fefe.de:80"
+    image: caddy 
+    network_mode: host
+    volumes: 
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    command: caddy run --config /etc/caddy/Caddyfile
+
