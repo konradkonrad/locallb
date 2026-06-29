@@ -1,5 +1,22 @@
+{
+	log default {
+		output stdout
+		format json
+		level DEBUG
+	}
+	servers localhost:80 {
+		trusted_proxies cloudflare {
+			interval 12h
+			timeout 15s
+		}
+	}
+}
 localhost:80 {
-	reverse_proxy {$PROXY_TO} {
-		lb_policy first
+	log
+	reverse_proxy {$_PROXY_TO} {
+		lb_policy ip_hash
+		fail_duration 30s
+		max_fails 1
+		stream_close_delay 1m
 	}
 }
