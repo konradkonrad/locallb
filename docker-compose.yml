@@ -1,21 +1,8 @@
 services:
   caddy:
-    environment:
-      PROXY_TO: "echo1:8080,echo2:8080"
     build: caddy
     ports:
       - 8083:80
-    volumes: 
+    volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./entrypoint.sh:/entrypoint.sh
-    command: /entrypoint.sh
-  echo1:
-    image: jmalloc/echo-server
-    ports:
-      - 8081:8080
-    hostname: echo1
-  echo2:
-    image: jmalloc/echo-server
-    ports:
-      - 8082:8080
-    hostname: echo2
+    restart: unless-stopped

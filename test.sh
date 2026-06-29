@@ -1,17 +1,17 @@
 #!/usr/bin/env sh
+set -e
 
-wscat -x test1 -c ws://localhost:8083
+echo "--- HTTP JSON-RPC: eth_chainId (expect 0x64 = 100, Gnosis) ---"
+curl -sS -X POST -H 'Content-Type: application/json' \
+	-d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
+	http://localhost:8083/
+echo
 
-docker compose stop echo1
+echo "--- HTTP JSON-RPC: eth_blockNumber ---"
+curl -sS -X POST -H 'Content-Type: application/json' \
+	-d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+	http://localhost:8083/
+echo
 
-wscat -x test2 -c ws://localhost:8083
-
-wscat -x test3 -c ws://localhost:8083
-
-docker compose start echo1
-
-wscat -x test4 -c ws://localhost:8083
-
-sleep 30
-
-wscat -x test5 -c ws://localhost:8083
+echo "--- WS: eth_chainId via wscat (needs: npm i -g wscat) ---"
+wscat -x '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' -c ws://localhost:8083/

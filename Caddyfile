@@ -1,22 +1,74 @@
 {
 	log default {
 		output stdout
-		format json
-		level DEBUG
-	}
-	servers localhost:80 {
-		trusted_proxies cloudflare {
-			interval 12h
-			timeout 15s
-		}
+		format console
+		level INFO
 	}
 }
-localhost:80 {
+
+:80 {
 	log
-	reverse_proxy {$_PROXY_TO} {
-		lb_policy ip_hash
-		fail_duration 30s
-		max_fails 1
-		stream_close_delay 1m
+
+	@websocket {
+		header Connection *Upgrade*
+		header Upgrade    websocket
+	}
+
+	handle @websocket {
+		reverse_proxy https://gnosis-rpc.publicnode.com https://gnosis.drpc.org {
+			lb_policy first
+			lb_try_duration 15s
+			lb_try_interval 250ms
+			lb_retries 3
+
+			lb_retry_match {
+				status 403 5xx
+			}
+
+			fail_duration 30s
+			max_fails 1
+			unhealthy_status 403 5xx
+			unhealthy_latency 10s
+
+			transport http {
+				tls
+				dial_timeout 5s
+			}
+
+			header_up Host {http.reverse_proxy.upstream.host}
+			header_up -X-Forwarded-For
+			header_up -X-Forwarded-Proto
+			header_up -X-Forwarded-Host
+
+			stream_close_delay 1m
+		}
+	}
+
+	handle {
+		reverse_proxy https://gnosis-rpc.publicnode.com https://gnosis.drpc.org https://rpc.gnosischain.com https://rpc.gnosis.gateway.fm https://1rpc.io/gnosis {
+			lb_policy first
+			lb_try_duration 15s
+			lb_try_interval 250ms
+			lb_retries 3
+
+			lb_retry_match {
+				status 403 5xx
+			}
+
+			fail_duration 30s
+			max_fails 1
+			unhealthy_status 403 5xx
+			unhealthy_latency 10s
+
+			transport http {
+				tls
+				dial_timeout 5s
+			}
+
+			header_up Host {http.reverse_proxy.upstream.host}
+			header_up -X-Forwarded-For
+			header_up -X-Forwarded-Proto
+			header_up -X-Forwarded-Host
+		}
 	}
 }
