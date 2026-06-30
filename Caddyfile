@@ -11,7 +11,7 @@
 
 	@websocket {
 		header Connection *Upgrade*
-		header Upgrade    websocket
+		header Upgrade websocket
 	}
 
 	handle @websocket {
@@ -21,13 +21,9 @@
 			lb_try_interval 250ms
 			lb_retries 3
 
-			lb_retry_match {
-				status 403 5xx
-			}
-
 			fail_duration 30s
 			max_fails 1
-			unhealthy_status 403 5xx
+			unhealthy_status 403 429 5xx
 			unhealthy_latency 10s
 
 			transport http {
@@ -45,20 +41,21 @@
 	}
 
 	handle {
-		reverse_proxy https://gnosis-rpc.publicnode.com https://gnosis.drpc.org https://rpc.gnosischain.com https://rpc.gnosis.gateway.fm https://1rpc.io/gnosis {
+		reverse_proxy https://gnosis-rpc.publicnode.com https://gnosis.drpc.org https://rpc.gnosischain.com https://rpc.gnosis.gateway.fm {
 			lb_policy first
 			lb_try_duration 15s
 			lb_try_interval 250ms
 			lb_retries 3
-
 			lb_retry_match {
-				status 403 5xx
+				expression `{http.reverse_proxy.status_code} != null && (int({http.reverse_proxy.status_code}) == 403 || int({http.reverse_proxy.status_code}) == 429 || (int({http.reverse_proxy.status_code}) >= 500 && int({http.reverse_proxy.status_code}) < 600))`
 			}
 
 			fail_duration 30s
 			max_fails 1
-			unhealthy_status 403 5xx
+			unhealthy_status 403 429 5xx
 			unhealthy_latency 10s
+
+			request_buffers 1MB
 
 			transport http {
 				tls
